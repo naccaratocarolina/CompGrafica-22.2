@@ -9,7 +9,7 @@ var VSHADER_SOURCE =
 
 var FSHADER_SOURCE =
     'void main() {\n' +
-    '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
+    '  gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
     '}\n';
 
 var ANGLE_STEP = 45.0; // Incremento do angulo (graus/segundo)
@@ -157,9 +157,9 @@ function main () {
 
     // Gera o loop da animacao
     var runanimation = function() {
-        currentAngle = calculateAngle(currentIndex);
+        currentAngle = calculateAngle(currentAngle);
         draw(gl, n, currentAngle, currentIndex, modelMatrix, u_ModelMatrix);
-        requestAnimationFrame(runanimation, canvas);
+        requestAnimationFrame(runanimation);
     };
     runanimation();
 };
