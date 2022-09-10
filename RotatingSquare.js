@@ -9,23 +9,52 @@ var VSHADER_SOURCE =
 
 var FSHADER_SOURCE =
     'void main() {\n' +
-    '  gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
+    '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
     '}\n';
 
-var ANGLE_STEP = 45.0; // Incremento do angulo (graus/segundo)
+// Medidas do canvas
+var width;
+var height;
 
+// Coordenada dos vertices
+//  v1------v0
+//  |       | 
+//  |       |
+//  |       |
+//  v2------v3
+var vertices = new Float32Array([
+    // x, z, y
+    // v0-v1-v2-v3
+    -0.3, -0.3, 0.3,
+    -0.3, 0.3, 0.3,
+    -0.3, -0.3, 0.3,
+    0.3, -0.3, 0.3,
+]);
+
+// Incremento do angulo (graus/segundo)
+var ANGLE_STEP = 45.0;
+
+// Ultima vez que a janela foi aberta
 var lasTime = Date.now();
+
+// Coordenadas para mudar o índice da rotacao
+const indexCoord = {
+    'r': [-0.3, -0.3, 0.3], 
+    'g': [-0.3, 0.3, 0.3], 
+    'b': [-0.3, -0.3, 0.3], 
+    'w': [0.3, -0.3, 0.3]
+};
 
 function mapToViewport (x, y, n = 5) {
     return [((x + n / 2) * width) / n, ((-y + n / 2) * height) / n];
 }
 
-function getVertex (i) {
-    let j = (i % numPoints) * 2;
-    return [positions[j], positions[j + 1]];
+function getVertex (i, n) {
+    let j = (i % n) * 2;
+    return [vertices[j], vertices[j + 1]];
 }
 
-function calculateAngle (angle) {
+function updateAngle (angle) {
     // Calcula o tempo decorrido
     var now = Date.now();
     var elapsed = now - lasTime;
@@ -36,19 +65,6 @@ function calculateAngle (angle) {
 };
 
 function initVertexBuffers (gl) {
-    //  v1------v0
-    //  |       | 
-    //  |       |
-    //  |       |
-    //  v2------v3
-    var vertices = new Float32Array([ // Coordenada dos vertices
-        // x, z, y
-        // v0-v1-v2-v3
-        -0.5, -0.5, 0.5,
-        -0.5, 0.5, 0.5,
-        -0.5, -0.5, 0.5,
-        0.5, -0.5, 0.5,
-    ]);
     var n = vertices.length / 2; // Numero de vertices
 
     // Cria o objeto do buffer
@@ -80,8 +96,9 @@ function initVertexBuffers (gl) {
 
 function draw (gl, n, currentAngle, currentIndex, modelMatrix, u_ModelMatrix) {
     // Define a matriz de rotação
-    modelMatrix.setRotate(currentAngle, 0, 0, 1);
-    modelMatrix.translate(0.3, 0.0, 0.0);
+    modelMatrix.setRotate(-currentAngle, 0, 0, 1);
+
+    modelMatrix.translate(currentIndex[0], currentIndex[1], currentIndex[2]);
 
     // Passa a matriz de rotação para o vertex shader
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
@@ -103,6 +120,10 @@ function main () {
         console.log('Falha ao obter o contexto de renderização para WebGL');
         return;
     }
+
+    // Recupera as medidas do canvas
+    width = canvas.width;
+    height = canvas.height;
     
     // Inicializa shaders
     if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
@@ -131,24 +152,15 @@ function main () {
     var currentAngle = 0.0;
 
     // Indice inicial de rotacao
-    var currentIndex = 0;
+    var currentIndex = [-0.3, -0.3, 0.3];
 
     // Escuta eventos do teclado para mudar cores e direcao de rotacao
     document.addEventListener("keydown", (e) => {
-        console.log(e.key);
-        switch (e.key) {
-            case "r":
-                currentIndex = 0;
-                break;
-            case "g":
-                currentIndex = 1;
-                break;
-            case "b":
-                currentIndex = 2;
-                break;
-            case "w":
-                currentIndex = 3;
-                break;
+        if (e.key === 'r' ||
+            e.key === 'g' ||
+            e.key === 'b' ||
+            e.key === 'w') {
+            currentIndex = indexCoord[e.key];
         }
     });
 
@@ -157,7 +169,7 @@ function main () {
 
     // Gera o loop da animacao
     var runanimation = function() {
-        currentAngle = calculateAngle(currentAngle);
+        currentAngle = updateAngle(currentAngle);
         draw(gl, n, currentAngle, currentIndex, modelMatrix, u_ModelMatrix);
         requestAnimationFrame(runanimation);
     };
