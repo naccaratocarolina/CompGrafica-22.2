@@ -39,10 +39,10 @@ var lasTime = Date.now();
 
 // Coordenadas para mudar o índice da rotacao
 const indexCoord = {
-    'r': [-0.3, -0.3, 0.3], 
-    'g': [-0.3, 0.3, 0.3], 
-    'b': [-0.3, -0.3, 0.3], 
-    'w': [0.3, -0.3, 0.3]
+    'r': [vertices[0], vertices[1], vertices[2]], 
+    'g': [vertices[3], vertices[4], vertices[5]], 
+    'b': [vertices[6], vertices[7], vertices[8]], 
+    'w': [vertices[9], vertices[10], vertices[11]]
 };
 
 function mapToViewport (x, y, n = 5) {
@@ -152,7 +152,7 @@ function main () {
     var currentAngle = 0.0;
 
     // Indice inicial de rotacao
-    var currentIndex = [-0.3, -0.3, 0.3];
+    var currentIndex = indexCoord['r'];
 
     // Escuta eventos do teclado para mudar cores e direcao de rotacao
     document.addEventListener("keydown", (e) => {
