@@ -111,7 +111,7 @@ function draw (ctx, angle, index) {
     [aux_x, aux_y] = mapToViewport(...getVertex(numPoints, 1, positions));
     ctx.beginPath();
     ctx.rect(aux_x - 3, aux_y - 3 , 8, 8);
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = 'rgba(0, 255, 4, 1)';
     ctx.fill();
     ctx.closePath();
 
