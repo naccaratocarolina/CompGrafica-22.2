@@ -8,6 +8,7 @@ var height; // Altura do canvas
 //  |       |
 //  |       |
 //  v2------v3
+
 var positions = new Float32Array([ // Coordenada dos vertices
     // x, z, y
     // v0-v1-v2-v3
@@ -17,19 +18,31 @@ var positions = new Float32Array([ // Coordenada dos vertices
     0.5, -0.5, 0.5,
 ]);
 
-var numPoints = positions.length / 2;
+var positions2 = new Float32Array([ // Coordenada dos vertices
+    // x, z, y
+    // v0-v1-v2-v3
+    -0.6, -0.6, 0.6,
+    -0.6, 0.6, 0.6,
+    -0.6, -0.6, 0.6,
+    0.6, -0.6, 0.6,
+]);
 
-var ANGLE_INCREMENT = 30.0; // Incremento do angulo (velocidade)
 
-var last_time = Date.now();
+var numPoints = 6;
+
+var ANGLE_STEP = 45.0; // Incremento do angulo (velocidade)
+
+var lasTime = Date.now(); // Ultima vez que a janela foi aberta
+
+const indexCoord = {'r': 0, 'g': 1, 'b': 2, 'w': 5 };
 
 function mapToViewport (x, y, n = 5) {
     return [((x + n / 2) * width) / n, ((-y + n / 2) * height) / n];
 }
 
-function getVertex (i) {
-    let j = (i % numPoints) * 2;
-    return [positions[j], positions[j + 1]];
+function getVertex (n, i, vertices) {
+    let j = (i % n) * 2;
+    return [vertices[j], vertices[j + 1]];
 }
 
 function draw (ctx, angle, index) {
@@ -37,29 +50,93 @@ function draw (ctx, angle, index) {
     ctx.rect(0, 0, width, height);
     ctx.fill();
 
-    let [x, y] = mapToViewport(...getVertex(index));
+    let [x, y] = mapToViewport(...getVertex(numPoints, index, positions));
     ctx.translate(x, y);
     ctx.rotate(-angle * Math.PI / 180);
     ctx.translate(-x, -y)
- 
+
+    // Desenha borda cinza
     ctx.beginPath();
     for (let i = 0; i < numPoints; i++) {
         if (i == 3 || i == 4) continue;
-        let [x, y] = mapToViewport(...getVertex(i).map((x) => x));
+        let [x, y] = mapToViewport(...getVertex(numPoints, i, positions2).map((x) => x));
         if (i == 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     }
-    ctx.closePath();
- 
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "grey";
     ctx.fill();
+
+    // Cria gradiente de acordo com o vertice selecionado
+    var grad;
+    if (indexCoord['r'] === index) {
+        grad = ctx.createLinearGradient(203, 150, x, y);
+        grad.addColorStop(0, 'rgba(12, 0, 255, 1)');
+        grad.addColorStop(1, 'rgba(255, 0, 0, 1)');
+    } else if (indexCoord['b'] === index) {
+        grad = ctx.createLinearGradient(167, 200, x, y);
+        grad.addColorStop(0, 'rgba(255, 0, 0, 1)');
+        grad.addColorStop(1, 'rgba(12, 0, 255, 1)');
+    } else if (indexCoord['w'] === index) {
+        grad = ctx.createLinearGradient(210, 270, x, y);
+        grad.addColorStop(0, 'rgba(0, 255, 4, 1)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 1)');
+    } else if (indexCoord['g'] === index) {
+        grad = ctx.createLinearGradient(167, 200, x, y);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(1, 'rgba(0, 255, 4, 1)');
+    }
+
+    // Desenha quadrado interno
+    ctx.beginPath();
+    for (let i = 0; i < numPoints; i++) {
+        if (i == 3 || i == 4) continue;
+        let [x, y] = mapToViewport(...getVertex(numPoints, i, positions).map((x) => x));
+        if (i == 0) {
+            ctx.moveTo(x, y);
+        }
+        else ctx.lineTo(x, y);
+    }
+    ctx.fillStyle = grad; 
+    ctx.fill();
+
+    // Adiciona quadrado vermelho
+    let [aux_x, aux_y] = mapToViewport(...getVertex(numPoints, 0, positions));
+    ctx.beginPath();
+    ctx.rect(aux_x - 3, aux_y - 3 , 8, 8);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.closePath();
+
+    // Adiciona quadrado verde
+    [aux_x, aux_y] = mapToViewport(...getVertex(numPoints, 1, positions));
+    ctx.beginPath();
+    ctx.rect(aux_x - 3, aux_y - 3 , 8, 8);
+    ctx.fillStyle = 'green';
+    ctx.fill();
+    ctx.closePath();
+
+    // Adiciona quadrado azul
+    [aux_x, aux_y] = mapToViewport(...getVertex(numPoints, 2, positions));
+    ctx.beginPath();
+    ctx.rect(aux_x - 3, aux_y - 3 , 8, 8);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.closePath();
+
+    // Adiciona quadrado branco
+    [aux_x, aux_y] = mapToViewport(...getVertex(numPoints, 5, positions));
+    ctx.beginPath();
+    ctx.rect(aux_x - 3, aux_y - 3 , 8, 8);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.closePath();
 }
 
 function calculateAngle (angle) {
     var now = Date.now();
-    var elapsed = now - last_time;
-    last_time = now;
-    var newAngle = angle + (ANGLE_INCREMENT * elapsed) / 1000.0;
+    var elapsed = now - lasTime;
+    lasTime = now;
+    var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
     return newAngle %= 360;
 };
 
@@ -78,27 +155,23 @@ function mainEntrance () {
     width = canvas.width;
     height = canvas.height;
 
-    // Muda a direcao da rotacao
-    var currentIndex = 0; // Indice inicial de rotacao
+    // Escuta eventos do teclado para mudar cores e direcao de rotacao
     document.addEventListener("keydown", (e) => {
-        switch (e.key) {
-            case "r":
-                currentIndex = 0;
-                break;
-            case "g":
-                currentIndex = 1;
-                break;
-            case "b":
-                currentIndex = 2;
-                break;
-            case "w":
-                currentIndex = 3;
-                break;
+        if (e.key === 'r' ||
+            e.key === 'g' ||
+            e.key === 'b' ||
+            e.key === 'w') {
+            currentIndex = indexCoord[e.key];
         }
     });
 
+    // Angulo inicial
+    var currentAngle = 2.0;
+
+    // Indice inicial de rotacao
+    var currentIndex = indexCoord['r'];
+
     // Gera o loop da animacao
-    var currentAngle = 2.0; // Angulo inicial
     var runanimation = (() => {
         currentAngle = calculateAngle(currentAngle);
         return () => {
