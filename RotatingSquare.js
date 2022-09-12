@@ -30,7 +30,7 @@ var positions2 = new Float32Array([ // Coordenada dos vertices
 
 var numPoints = 6;
 
-var ANGLE_STEP = 45.0; // Incremento do angulo (velocidade)
+var ANGLE_STEP = 2.0; // Incremento do angulo (velocidade)
 
 var lasTime = Date.now(); // Ultima vez que a janela foi aberta
 
