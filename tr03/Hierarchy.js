@@ -1,20 +1,3 @@
-/**
- * @file
- *
- * Summary.
- * <p>Hierarchical Robot object using a matrix stack.</p>
- *
- * @author Paulo Roma
- * @since 27/09/2016
- * @see https://orion.lcg.ufrj.br/WebGL/labs/WebGL/Assignment_3/Hierarchy.html
- * @see <a href="/WebGL/labs/WebGL/Assignment_3/Hierarchy.js">source</a>
- * @see <a href="/WebGL/labs/WebGL/teal_book/cuon-matrix.js">cuon-matrix</a>
- * @see https://www.cs.ucy.ac.cy/courses/EPL426/courses/eBooks/ComputerGraphicsPrinciplesPractice.pdf#page=188
- * @see https://www.cs.drexel.edu/~david/Classes/ICG/Lectures_new/L-14_HierchModels.pdf
- * @see https://www.lcg.ufrj.br/WebGL/labs/WebGL/Assignment_3/5.hierarchy.pdf
- * @see <img src="../robot.png" width="512">
- */
-
 "use strict";
 
 var VSHADER_SOURCE = 
@@ -80,21 +63,7 @@ class Stack {
   }
 }
 
-/**
- * Creates data for vertices, colors, and normal vectors for
- * a unit cube.
- *
- * Return value is an object with three attributes:
- * vertices, colors, and normals, each referring to a Float32Array.<br>
- * (Note this is a "self-invoking" anonymous function.)
- * @return {Object<{numVertices: Number, vertices: Float32Array, colors: Float32Array, normals: Float32Array}>}
- * vertex array with associated color and normal arrays.
- * @function
- * @global
- */
 var cube = (function makeCube() {
-  // vertices of cube
-  // prettier-ignore
   var rawVertices = new Float32Array([
       -0.5, -0.5, 0.5,
       0.5, -0.5, 0.5,
@@ -106,7 +75,6 @@ var cube = (function makeCube() {
       -0.5, 0.5, -0.5
     ]);
 
-  // prettier-ignore
   var rawColors = new Float32Array([
       1.0, 0.0, 0.0, 1.0,  // red
       0.0, 1.0, 0.0, 1.0,  // green
@@ -116,7 +84,6 @@ var cube = (function makeCube() {
       0.0, 1.0, 1.0, 1.0,  // cyan
     ]);
 
-  // prettier-ignore
   var rawNormals = new Float32Array([
       0, 0, 1,
       1, 0, 0,
@@ -126,7 +93,6 @@ var cube = (function makeCube() {
       0, -1, 0
     ]);
 
-  // prettier-ignore
   var indices = new Uint16Array([
       0, 1, 2, 0, 2, 3,  // z face
       1, 5, 6, 1, 6, 2,  // +x face
@@ -173,15 +139,12 @@ function makeNormalMatrixElements(model, view) {
   n.transpose();
   n.invert();
   n = n.elements;
-  // prettier-ignore
   return new Float32Array([
       n[0], n[1], n[2],
       n[4], n[5], n[6],
       n[8], n[9], n[10]
     ]);
 }
-
-// A few global variables...
 
 // the OpenGL context
 var gl;
@@ -211,6 +174,10 @@ var handAngle = 0.0;
 var headAngle = 0.0;
 var legsAngle = 0.0;
 
+// Simple rotator variables
+var torsoAngle_X = 0.0;
+var torsoAngle_Y = 0.0;
+
 var torsoMatrixLocal = new Matrix4().setScale(10, 10, 5);
 var rightShoulderMatrixLocal = new Matrix4().setScale(3, 5, 2);
 var leftShoulderMatrixLocal = new Matrix4().setScale(3, 5, 2);
@@ -222,21 +189,14 @@ var legMatrixLocal = new Matrix4().setScale(3, 12, 2);
 var feetMatrixLocal = new Matrix4().setScale(7, 0.5, 6);
 
 // view matrix
-// prettier-ignore
 var view = new Matrix4().setLookAt(
-		20, 20, 20,   // eye
-		0, 0, 0,      // at - looking at the origin
-		0, 1, 0); // up vector - y axis
+    20, 20, 20,   // eye
+    0, 0, 0,      // at - looking at the origin
+    0, 1, 0); // up vector - y axis
 
 // Here use aspect ratio 3/2 corresponding to canvas size 600 x 400
 var projection = new Matrix4().setPerspective(45, 1.5, 0.1, 1000);
 
-/**
- * Translate keypress events to strings.
- * @param {KeyboardEvent} event key pressed.
- * @return {String | null}
- * @see http://javascript.info/tutorial/keyboard-events
- */
 function getChar(event) {
   if (event.which == null) {
     return String.fromCharCode(event.keyCode); // IE
@@ -247,25 +207,20 @@ function getChar(event) {
   }
 }
 
-/**
- * <p>Handler for key press events.</p>
- * Adjusts object rotations.
- * @param {KeyboardEvent} event key pressed.
- */
 function handleKeyPress(event) {
   var ch = getChar(event);
   switch (ch) {
     case "b":
     case "B":
       torsoAngle -= 15;
-      torsoMatrix.setTranslate(0, 0, 0).rotate(torsoAngle, 0, 1, 0);
+      torsoMatrix.setTranslate(0, 0, 0).rotate(torsoAngle_X + torsoAngle, 0, 1, 0);
       break;
     case "t":
     case "T":
       torsoAngle -= 15;
-      torsoMatrix.setTranslate(0,0,0).rotate(torsoAngle, 0, 1, 0);
+      torsoMatrix.setTranslate(0, 0, 0).rotate(torsoAngle_X + torsoAngle, 0, 1, 0);
       legsAngle += 15;
-      legMatrix.setTranslate(0, -11, 0).rotate(legsAngle, 0, 1,0);
+      legMatrix.setTranslate(0, -11, 0).rotate(legsAngle, 0, 1, 0);
     break;
     case "s":
     case "S":
@@ -302,20 +257,39 @@ function handleKeyPress(event) {
     case "m":
     case "M":
       legsAngle -= 15;
-      legMatrix.setTranslate(0, -11, 0).rotate(legsAngle, 0, 1,0);
+      legMatrix.setTranslate(0, -11, 0).rotate(legsAngle, 0, 1, 0);
       break;
     default:
       return;
   }
 }
 
-/**
- * <p>Helper function.</p>
- * Renders the cube based on the model transformation
- * on top of the stack and the given local transformation.
- * @param {Matrix4} matrixStack matrix on top of the stack;
- * @param {Matrix4} matrixLocal local transformation.
- */
+var mouseIsPressed = false;
+var cvs = document.querySelector('canvas');
+
+window.addEventListener("mousedown", (event) => {
+    mouseIsPressed = true;
+});
+
+window.addEventListener("mouseup", (event) => {
+    mouseIsPressed = false;
+});
+
+var current_X = 0;
+var current_Y = 0;
+cvs.addEventListener("mousemove", (event) => {
+  event = event || window.event;
+  if(mouseIsPressed) {
+    if(current_X < event.clientX) torsoAngle_X += event.clientX / 100;
+    if(current_X > event.clientX) torsoAngle_X -= event.clientX / 100;
+    if(current_Y < event.clientY) torsoAngle_Y -= event.clientY / 100;
+    if(current_Y > event.clientY) torsoAngle_Y += event.clientY / 100;
+    torsoMatrix.setTranslate(0, 0, 0).rotate(torsoAngle_X + torsoAngle, 0, 1, 0).rotate(torsoAngle_Y, 1, 0, 0);
+    current_X = event.clientX;
+    current_Y = event.clientY;
+  }
+});
+
 function renderCube(matrixStack, matrixLocal) {
   // bind the shader
   gl.useProgram(lightingShader);
