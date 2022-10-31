@@ -165,7 +165,7 @@ var leftArmMatrix = new Matrix4().setTranslate(0, -5, 0);
 var handMatrix = new Matrix4().setTranslate(0, -4, 0);
 var headMatrix = new Matrix4().setTranslate(0, 7, 0);
 var legMatrix = new Matrix4().setTranslate(0,-11,0);
-var feetMatrix = new Matrix4().setTranslate(0,-7,0);
+var feetMatrix = new Matrix4().setTranslate(0,-6,0);
 
 var torsoAngle = 0.0;
 var shoulderAngle = 0.0;
